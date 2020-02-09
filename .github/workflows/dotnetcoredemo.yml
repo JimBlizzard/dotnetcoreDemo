@@ -8,10 +8,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Run a one-line script
-      run: echo Hello, world!
-    - name: Run a multi-line script
+
+    - name: checkout master
+      uses: actions/checkout@master
+      
+    - name: Setup .NET Core SDK
+      uses: actions/setup-dotnet@v1.4.0
+      with:
+        dotnet-version: '3.1.100'
+
+    # dotnet build        
+    - name: Build with dotnet
+      run: dotnet build --configuration Release      
+
+    # publish the app
+    - name: dotnet publish
       run: |
-        echo Add other actions to build,
-        echo test, and deploy your project.
+        dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp 
+    - name: 'Run Azure webapp deploy action using publish profile credentials'
+      uses: azure/webapps-deploy@v1
+      with: 
+        app-name: dotnetcoredemoblizz # Replace with your app name
+        publish-profile: ${{ secrets.dotnetcoredemoblizzPubProfile }} # Define secret variable in repository settings as per action documentation
+        package: ${{env.DOTNET_ROOT}}/myapp
